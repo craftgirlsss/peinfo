@@ -1,6 +1,13 @@
+certifi==2024.8.30
+charset-normalizer==3.4.0
 colorama==0.4.6
 DDos==1.0.3
 fake-useragent==1.5.1
+idna==3.10
 importlib_resources==6.4.5
 python-nmap==0.7.1
+requests==2.32.3
+thread==2.0.5
+typing_extensions==4.12.2
+urllib3==2.2.3
 zipp==3.20.2
