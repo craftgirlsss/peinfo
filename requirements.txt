@@ -1,0 +1,6 @@
+colorama==0.4.6
+DDos==1.0.3
+fake-useragent==1.5.1
+importlib_resources==6.4.5
+python-nmap==0.7.1
+zipp==3.20.2
