@@ -10,7 +10,7 @@ class ArgumentHandler:
     def argumentHandler(self):
         if(len(sys.argv)-1 == 0):
             Help.exampleUsage()
-        if(sys.argv[1] == "-n"):
+        elif(sys.argv[1] == "-n"):
             NmapProject(arguments=sys.argv, target=len(sys.argv))
         elif(sys.argv[1] == "-d"):
             DDoS(target="helow")
